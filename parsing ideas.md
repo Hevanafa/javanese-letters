@@ -118,3 +118,4 @@ Refactor `translate` function into smaller functions like:
 	- convertNumbers
 	- convertDigraphs
 	- convertSingles
+
