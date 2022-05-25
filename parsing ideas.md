@@ -108,7 +108,7 @@ Outputs that are wrong after panyigeg:
 	"nkra" cluster
 
 
-Stop development before refactoring
+Stop development before refactoring (done)
 
 Save this project to an online repository
 
@@ -119,3 +119,8 @@ Refactor `translate` function into smaller functions like:
 	- convertDigraphs
 	- convertSingles
 
+
+Make the "Guide" page on how to use, including how to write Sanskrit, long vowels, rékan, aksara swara & aksara murda.
+
+
+Always take care of digraphs first before single letters to prevent mistranslation.

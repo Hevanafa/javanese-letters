@@ -61,6 +61,13 @@ const vowels: StringDict = {
 	ê: "ꦼ",
 	e: "ꦼ",
 	o: "ꦺꦴ", // special case: [ "ꦏ", "ꦺ", "ꦴ" ]
+
+	// Sanskrit & long vowels
+	ā: "ꦴ",
+	ī: "ꦷ",
+	ū: "ꦹ",
+	ai: "ꦻ",
+	au: "ꦻꦴ"
 };
 
 // only used in the middle or at the end of the whole text
@@ -170,6 +177,47 @@ function translateNumbers(str: string) {
 		);
 }
 
+const
+	basicDigraphRegex = /(dh|th|ny|ng)/,
+	basicVowelRegex = /([aeiouèéê])/,
+	negativeLookaheadVowelRegex = /(?![aeiouèéê])/,
+	basicConsonantRegex = /([b-df-hj-np-tv-z'])/,
+
+	// semivowel (only written in the middle of a syllable)
+	sandhanganWyanjanaRegex = /([lrwy])/;
+
+
+// Sanskrit regexes
+// Extended from the basic version
+const
+	// sanskritDigraphRegex = /(kh|gh|ch|jh|ṭh|ḍh|ph|bh)/,
+	sanskritDigraphRegex = /(dh|th|ny|ng|kh|gh|ch|jh|ṭh|ḍh|ph|bh)/,
+	// sanskritConsonantRegex = /([ṇśṣṭḍ])/;
+	sanskritConsonantRegex = /([b-df-hj-np-tv-z'ṇśṣṭḍ])/,
+	sanskritVowelRegex = /(ai|au|[aeiouèéêāīū])/,
+	negativeLookaheadSanskritVowelRegex = /(?!ai|au|[aeiouèéêāīū])/;
+
+// mnemonics
+// const
+// 	badirex = basicDigraphRegex,
+// 	bavorex = basicVowelRegex,
+// 	neglavorex = negativeLookaheadVowelRegex,
+// 	baconsrex = basicConsonantRegex;
+
+
+function joinRegexSources(...ary: RegExp[]) {
+	return ary.map(r => r.source).join("");
+}
+
+function newGlobalRegex(...ary: RegExp[]) {
+	return new RegExp(joinRegexSources(...ary), "g");
+}
+
+function combineRegexGroupSources(...ary: RegExp[]) {
+	return "(" + ary.map(r => r.source).join("").replace(/[()]/, "") + ")";
+}
+
+
 export function translate(str: string, paragraphMarks = false) {
 	if (!str.length)
 		return "";
@@ -186,48 +234,98 @@ export function translate(str: string, paragraphMarks = false) {
 		str
 
 			// take care of double letters
-			.replace(/(dh|th|ny|ng)([yrlw])([aeiouèéê])/, (_, frontCons, wyanjana, vowel) =>
-				// Sandhangan wyanjana
-				consonants[frontCons] + sandhanganWyanjana[wyanjana] + getVowel(vowel)
+			.replace(
+				// /(dh|th|ny|ng)([lrwy])([aeiouèéê])/g,
+				newGlobalRegex(
+					// basicDigraphRegex,
+					sanskritDigraphRegex,
+					sandhanganWyanjanaRegex,
+
+					// basicVowelRegex
+					sanskritVowelRegex
+				),
+
+				(_, frontCons, midCons, vowel) =>
+					// Sandhangan wyanjana
+					consonants[frontCons] + sandhanganWyanjana[midCons] + getVowel(vowel)
 			)
-			.replace(/(dh|th|ny|ng)(?![aeiouèéê])/g, match => {
-				// End of syllable
+			.replace(
+				// /(dh|th|ny|ng)(?![aeiouèéê])/g,
+				newGlobalRegex(
+					// basicDigraphRegex,
+					sanskritDigraphRegex,
 
-				return match in syllableEnds
-					? syllableEnds[match]
-					: consonants[match] + virama;
-			})
-			.replace(/(dh|th|ny|ng)([aeiouèéê])/g, (match, consonant, vowel) => {
-				// Normal consonant + vowel
-				// console.log("final cons & vowel", consonant, vowel);
+					// negativeLookaheadVowelRegex
+					negativeLookaheadSanskritVowelRegex
+				),
+				match =>
+					// End of syllable
 
-				return consonants[consonant] + getVowel(vowel);
-			})
+					match in syllableEnds
+						? syllableEnds[match]
+						: consonants[match] + virama
+			)
+			.replace(
+				// /(dh|th|ny|ng)([aeiouèéê])/g,
+				newGlobalRegex(
+					// basicDigraphRegex,
+					sanskritDigraphRegex,
+
+					// basicVowelRegex
+					sanskritVowelRegex
+				),
+				(_, consonant, vowel) =>
+					// Normal consonant + vowel
+					consonants[consonant] + getVowel(vowel)
+			)
 
 			.replace(/(?<!^|\s|[aeiouèéê])re/g, sandhanganRe)
 
 			// take care of single letters
-			.replace(/([b-df-hj-np-tv-z'])([yrlw])([aeiouèéê])/, (_, frontCons, wyanjana, vowel) =>
-				// sandhangan wyanjana
-				consonants[frontCons] + sandhanganWyanjana[wyanjana] + getVowel(vowel)
+			.replace(
+				// /([b-df-hj-np-tv-z'])([lrwy])([aeiouèéê])/g,
+				newGlobalRegex(
+					// basicConsonantRegex,
+					sanskritConsonantRegex,
+					sandhanganWyanjanaRegex,
+
+					// basicVowelRegex
+					sanskritVowelRegex
+				),
+				(_, frontCons, midCons, vowel) =>
+					// sandhangan wyanjana
+					consonants[frontCons] + sandhanganWyanjana[midCons] + getVowel(vowel)
 			)
-			.replace(/([b-df-hj-np-tv-z'])(?![aeiouèéê])/g, match => {
-				// End of syllable
+			.replace(
+				// /([b-df-hj-np-tv-z'])(?![aeiouèéê])/g,
+				newGlobalRegex(
+					// basicConsonantRegex,
+					sanskritConsonantRegex,
 
-				// console.log("consonant w/o vowel", match);
+					// negativeLookaheadVowelRegex
+					negativeLookaheadSanskritVowelRegex
+				),
+				match =>
+					// End of syllable
 
-				return match in syllableEnds
-					? syllableEnds[match]
-					: consonants[match] + virama;
-				// return consonants[match] + virama;
-			})
+					match in syllableEnds
+						? syllableEnds[match]
+						: consonants[match] + virama
+			)
 
-			.replace(/([b-df-hj-np-tv-z'])([aeiouèéê])/g, (match, consonant, vowel) => {
-				// Normal consonant + vowel
-				// console.log("final cons & vowel", consonant, vowel);
+			.replace(
+				// /([b-df-hj-np-tv-z'])([aeiouèéê])/g,
+				newGlobalRegex(
+					// basicConsonantRegex,
+					sanskritConsonantRegex,
 
-				return consonants[consonant] + getVowel(vowel);
-			})
+					// basicVowelRegex
+					sanskritVowelRegex
+				),
+				(_, consonant, vowel) =>
+					// Normal consonant + vowel
+					consonants[consonant] + getVowel(vowel)
+			)
 
 			// take care of extra spaces
 			.replace(/\s/g, "");
