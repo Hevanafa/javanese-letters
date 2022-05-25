@@ -156,6 +156,10 @@ function App() {
 	// 	setOutputStr(out.join(""));
 	// }, [inputStr]);
 
+	const tdStyle: React.CSSProperties = {
+		border: "1px solid black"
+	};
+
 	return (
 		<div className="App">
 			<div id="inputBox">
@@ -167,8 +171,8 @@ function App() {
 
 			<p>
 				<b>Catatan:</b><br />
-				Untuk kata-kata yg tidak diawali konsonan (contoh: "ing" atau "ingkang"), gunakan petik 1 ' sebelum menulis huruf vokal.<br />
-				Untuk vokal yg menggunakan taling, gunakan huruf é atau è.
+				Untuk vokal yg menggunakan taling, gunakan huruf é atau è.<br />
+				Aplikasi ini mendukung ejaan Jawa modern &amp; Sansekerta, termasuk huruf vokal panjang &amp; diftong (ai / au).
 			</p>
 
 			<p>
@@ -186,20 +190,34 @@ function App() {
 							Example Test Cases
 						</h3>
 
-						<table style={{ fontSize: "14px" }}>
+						<table style={{ fontSize: "14px", borderCollapse: "collapse" }}>
 							<thead>
 								<tr>
-									<td>Latin</td>
-									<td>Javanese Script</td>
+									<td style={tdStyle}>Latin</td>
+									<td style={tdStyle}>Javanese Script</td>
+									<td style={tdStyle}>Latin</td>
+									<td style={tdStyle}>Javanese Script</td>
 								</tr>
 							</thead>
 							<tbody>
-								{testCases.map((item, idx) =>
-									<tr key={`case_${idx}`}>
-										<td>{item}</td>
-										<td>{translate(item)}</td>
-									</tr>
-								)}
+								{
+									[...Array(Math.ceil(testCases.length / 2))].map((_, n) => {
+										const idx = n * 2;
+
+										return <tr key={`case_${idx}`}>
+											<td style={tdStyle}>{testCases[idx]}</td>
+											<td style={tdStyle}>{translate(testCases[idx])}</td>
+
+											{
+												testCases[idx + 1]
+													? <>
+														<td style={tdStyle}>{testCases[idx + 1]}</td>
+														<td style={tdStyle}>{translate(testCases[idx + 1])}</td>
+													</> : null
+											}
+										</tr>
+									})
+								}
 							</tbody>
 						</table>
 					</> : null}
@@ -210,12 +228,13 @@ function App() {
 					<>
 						<h3>Kawi Test Cases</h3>
 
-						{kawiTestCases.map((paragraph, idx) =>
-							<Fragment key={`kawi_${idx}`}>
-								<p>{paragraph}</p>
-								<p>{translate(paragraph, true)}</p>
-							</Fragment>
-						)}
+						{
+							kawiTestCases.map((paragraph, idx) =>
+								<Fragment key={`kawi_${idx}`}>
+									<p>{paragraph}</p>
+									<p>{translate(paragraph, true)}</p>
+								</Fragment>
+							)}
 					</>
 					: null
 			}
