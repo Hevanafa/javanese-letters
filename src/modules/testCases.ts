@@ -39,10 +39,10 @@ export const testCases = [
 	"ngudut ganja",
 	"ngréwangi lan ngriwuki",
 
-	// these make the converter broken, skip for advertisement
-	// "njlimet",
-	// "mblénjani janji",
-	// "jangan mlinjo",
+	// these make the converter broken, skip for advertisement (fixed 26-05-2022)
+	"njlimet",
+	"mblénjani janji",
+	"jangan mlinjo",
 
 	// Sanskrit loanwords
 	"śrī",

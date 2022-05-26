@@ -328,5 +328,8 @@ export function translate(str: string, paragraphMarks = false) {
 			)
 
 			// take care of extra spaces
-			.replace(/\s/g, "");
+			.replace(/\s/g, "")
+			.replace(new RegExp(`(.${virama})(.${virama})`, "g"), (_, _1, _2) => 
+				`${_1} ${_2}`
+			);
 }
